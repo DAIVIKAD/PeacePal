@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeacePal Wellness Platform</title>
+    <meta name="description" content="Complete wellness platform with stress relief garden, mood tracking, AI journaling, and health discovery">
+    <meta name="theme-color" content="#8B5CF6">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Main Application Container -->
+    <div class="app-container">
+        <!-- Header Navigation -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="app-logo">🌸</div>
+                    <h1>PeacePal</h1>
+                </div>
+                
+                <nav class="main-navigation">
+                    <button class="nav-tab active" data-tab="garden" onclick="switchTab('garden')">
+                        <span class="tab-icon">🌱</span>
+                        <span class="tab-label">Garden</span>
+                    </button>
+                    <button class="nav-tab" data-tab="dashboard" onclick="switchTab('dashboard')">
+                        <span class="tab-icon">📊</span>
+                        <span class="tab-label">Dashboard</span>
+                    </button>
+                    <button class="nav-tab" data-tab="journal" onclick="switchTab('journal')">
+                        <span class="tab-icon">📝</span>
+                        <span class="tab-label">Journal</span>
+                    </button>
+                    <button class="nav-tab" data-tab="discovery" onclick="switchTab('discovery')">
+                        <span class="tab-icon">🔍</span>
+                        <span class="tab-label">Discover</span>
+                    </button>
+                </nav>
+                
+                <div class="user-section">
+                    <div class="points-display">
+                        <span class="points-icon">⭐</span>
+                        <span id="userPoints">340</span>
+                    </div>
+                    <div class="user-avatar">
+                        <span>Alex</span>
+                        <div class="avatar-circle">👤</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Garden Interface (Theme 1) -->
+            <section class="content-section active" id="garden">
+                <div class="garden-container">
+                    <div class="garden-header">
+                        <h2 class="garden-title">STRESS RELIEF GARDEN</h2>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 72%"></div>
+                            </div>
+                            <span class="progress-text">72/100</span>
+                        </div>
+                    </div>
+                    
+                    <div class="garden-scene">
+                        <!-- Sky and Clouds -->
+                        <div class="garden-sky">
+                            <div class="cloud cloud-1">☁️</div>
+                            <div class="cloud cloud-2">☁️</div>
+                            <div class="cloud cloud-3">☁️</div>
+                        </div>
+                        
+                        <!-- Interactive Characters -->
+                        <div class="garden-character fox" data-character="fox" onclick="showCharacterMessage('fox')">
+                            🦊
+                            <div class="character-tooltip">Great job tending to your wellness garden today!</div>
+                        </div>
+                        
+                        <div class="garden-character bee" data-character="bee" onclick="showCharacterMessage('bee')">
+                            🐝
+                            <div class="character-tooltip">Buzzing with excitement about your progress!</div>
+                        </div>
+                        
+                        <div class="garden-character butterfly" data-character="butterfly" onclick="showCharacterMessage('butterfly')">
+                            🦋
+                            <div class="character-tooltip">Transformation is beautiful, just like your wellness journey!</div>
+                        </div>
+                        
+                        <div class="garden-character bird" data-character="bird" onclick="showCharacterMessage('bird')">
+                            🐦
+                            <div class="character-tooltip">Soaring to new heights of wellness with you!</div>
+                        </div>
+                        
+                        <!-- Garden Elements -->
+                        <div class="garden-element flower-red" onclick="interactWithPlant('red-flower')">
+                            🌺
+                        </div>
+                        
+                        <div class="garden-element flower-blue" onclick="interactWithPlant('blue-flower')">
+                            🌸
+                        </div>
+                        
+                        <div class="garden-element main-tree" onclick="interactWithPlant('tree')">
+                            🌳
+                        </div>
+                        
+                        <div class="garden-element sunflowers" onclick="interactWithPlant('sunflowers')">
+                            🌻
+                        </div>
+                        
+                        <!-- Achievement Stars -->
+                        <div class="achievement achievement-1">⭐</div>
+                        <div class="achievement achievement-2">🏆</div>
+                        
+                        <!-- Hearts at bottom -->
+                        <div class="garden-hearts">
+                            <span class="heart">🧡</span>
+                            <span class="heart">❤️</span>
+                            <span class="heart">🧡</span>
+                        </div>
+                    </div>
+                    
+                    <div class="garden-actions">
+                        <button class="continue-btn" onclick="continueJourney()">
+                            CONTINUE
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard Interface (Theme 2) -->
+            <section class="content-section" id="dashboard">
+                <div class="dashboard-container">
+                    <div class="dashboard-header">
+                        <div class="header-subtitle">WELLNESS</div>
+                        <div class="header-title">Dashboard</div>
+                    </div>
+                    
+                    <div class="dashboard-content">
+                        <!-- Mood Logger Card -->
+                        <div class="dashboard-card mood-card" onclick="openMoodLogger()">
+                            <div class="card-content">
+                                <span class="card-text">Log your mood</span>
+                                <span class="card-arrow">→</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Mood Chart Section -->
+                        <div class="dashboard-widget chart-widget">
+                            <h3 class="widget-title">Mood over time</h3>
+                            <div class="chart-container" style="position: relative; height: 250px;">
+                                <canvas id="moodChart"></canvas>
+                            </div>
+                            <div class="chart-labels">
+                                <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Current Mood Status -->
+                        <div class="dashboard-widget mood-status">
+                            <h3 class="widget-title">Today's mood</h3>
+                            <div class="mood-display">
+                                <div class="mood-emoji">😊</div>
+                                <div class="mood-label">Good</div>
+                                <div class="mood-progress">
+                                    <div class="progress-ring">
+                                        <div class="progress-fill-ring" style="stroke-dasharray: 251.2, 314;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bottom Navigation -->
+                    <div class="bottom-navigation">
+                        <button class="nav-btn active" onclick="setActiveNav(this)">
+                            <span class="nav-icon">🏠</span>
+                            <span class="nav-label">Home</span>
+                        </button>
+                        <button class="nav-btn" onclick="setActiveNav(this)">
+                            <span class="nav-icon">📈</span>
+                            <span class="nav-label">Analytics</span>
+                        </button>
+                        <button class="nav-btn add-btn" onclick="setActiveNav(this)">
+                            <span class="nav-icon">➕</span>
+                            <span class="nav-label">Add</span>
+                        </button>
+                        <button class="nav-btn" onclick="setActiveNav(this)">
+                            <span class="nav-icon">💬</span>
+                            <span class="nav-label">Chat</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Journal Interface (Theme 3) -->
+            <section class="content-section" id="journal">
+                <div class="journal-container">
+                    <div class="journal-header">
+                        <div class="journal-brand">PeacePal</div>
+                        <h2 class="journal-title">Wellness Journal</h2>
+                    </div>
+                    
+                    <div class="journal-layout">
+                        <!-- Writing Area -->
+                        <div class="journal-editor">
+                            <div class="editor-toolbar">
+                                <button class="toolbar-btn" onclick="formatText('bold')">B</button>
+                                <button class="toolbar-btn" onclick="formatText('italic')">I</button>
+                                <button class="toolbar-btn" onclick="formatText('list')">≡</button>
+                                <button class="toolbar-btn more-btn">...</button>
+                            </div>
+                            
+                            <div class="editor-content">
+                                <textarea 
+                                    id="journalTextarea"
+                                    class="journal-textarea" 
+                                    placeholder="Write about your thoughts and feelings..."
+                                    oninput="analyzeText()"
+                                >Today, I took some time to enjoy the outdoors. I went for a long walk in the park and appreciated the fresh air and sunshine. It felt refreshing to disconnect from technology and connect with nature.</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- AI Analysis Sidebar -->
+                        <div class="journal-sidebar">
+                            <!-- Sentiment Analysis -->
+                            <div class="sidebar-widget sentiment-widget">
+                                <h3 class="widget-title">Sentiment</h3>
+                                <div class="sentiment-chart">
+                                    <div class="chart-container" style="position: relative; height: 200px;">
+                                        <canvas id="sentimentChart"></canvas>
+                                    </div>
+                                    <div class="chart-center-emoji">😊</div>
+                                </div>
+                            </div>
+                            
+                            <!-- AI Suggestions -->
+                            <div class="sidebar-widget suggestions-widget">
+                                <div class="suggestions-header">
+                                    <h3 class="widget-title">AI Suggestions</h3>
+                                    <span class="suggestions-arrow">→</span>
+                                </div>
+                                <div class="suggestions-content">
+                                    <p class="suggestion-text">Reflect on something you are grateful for today.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Discovery Interface (Theme 4) -->
+            <section class="content-section" id="discovery">
+                <div class="discovery-container">
+                    <div class="discovery-header">
+                        <div class="header-section">
+                            <h2 class="discovery-title">Health</h2>
+                            <div class="discovery-subtitle">
+                                <span>Discover</span>
+                                <span class="info-icon">ℹ️</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="discovery-feed">
+                        <!-- Exercise Video Card -->
+                        <article class="content-card video-card">
+                            <div class="card-media">
+                                <div class="video-thumbnail">
+                                    <div class="exercise-illustration">🏃‍♀️</div>
+                                    <div class="play-button">▶️</div>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <h3 class="card-title">The Benefits of Regular Exercise</h3>
+                                <div class="card-engagement">
+                                    <div class="engagement-stats">
+                                        <span class="stat">❤️ 1,042</span>
+                                        <span class="stat">📌 56</span>
+                                    </div>
+                                    <div class="author-info">
+                                        <span class="author-avatar">👩‍⚕️</span>
+                                        <span class="view-count">1,042 views</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                        
+                        <!-- Diet Tips Article -->
+                        <article class="content-card article-card">
+                            <div class="card-content">
+                                <div class="card-badge curated">Curated</div>
+                                <h3 class="card-title">10 Tips for a Balanced Diet</h3>
+                                <p class="card-description">Learn how to maintain a healthy, well-rounded diet with these simple tips.</p>
+                                <div class="author-info">
+                                    <span class="author-avatar">👨‍🍳</span>
+                                    <span class="author-name">Nutrition Expert</span>
+                                </div>
+                            </div>
+                        </article>
+                        
+                        <!-- Health Info Card -->
+                        <article class="content-card info-card">
+                            <div class="card-content">
+                                <div class="card-icon">🩺</div>
+                                <h3 class="card-title">Understanding Hypertension</h3>
+                                <p class="card-description">Get the facts on high blood pressure, its causes, symptoms, and treatment options.</p>
+                                <div class="card-engagement">
+                                    <div class="engagement-stats">
+                                        <span class="stat">❤️ 230</span>
+                                        <span class="stat">📌 18</span>
+                                    </div>
+                                    <div class="author-info">
+                                        <span class="author-avatar">👨‍⚕️</span>
+                                        <span class="author-name">Medical Team</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                        
+                        <!-- Sleep Guide -->
+                        <article class="content-card sleep-card">
+                            <div class="card-media sleep-media">
+                                <div class="sleep-illustration">
+                                    <div class="sleep-person">😴</div>
+                                    <div class="sleep-z">💤</div>
+                                    <div class="sleep-moon">🌙</div>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <h3 class="card-title">How to Improve Your Sleep</h3>
+                                <div class="author-info">
+                                    <span class="author-avatar">🛌</span>
+                                    <span class="author-name">Sleep Specialist</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- Mood Logger Modal -->
+    <div class="modal hidden" id="moodModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>How are you feeling today?</h3>
+                <button class="close-btn" onclick="closeMoodModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mood-options">
+                    <button class="mood-option" data-mood="1" onclick="selectMood(1)">😢</button>
+                    <button class="mood-option" data-mood="2" onclick="selectMood(2)">😐</button>
+                    <button class="mood-option" data-mood="3" onclick="selectMood(3)">🙂</button>
+                    <button class="mood-option" data-mood="4" onclick="selectMood(4)">😊</button>
+                    <button class="mood-option" data-mood="5" onclick="selectMood(5)">😄</button>
+                </div>
+                <button class="btn btn--primary" onclick="logMood()">Log Mood</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
