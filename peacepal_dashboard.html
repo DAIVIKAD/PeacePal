@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PeacePal — Dashboard (PWA-ready)</title>
+  <meta name="description" content="PeacePal — mood journaling dashboard, offline-first, privacy-first PWA demo" />
+  <meta name="theme-color" content="#0b815a" />
+  <!-- Manifest (you can create a manifest.json in the same folder) -->
+  <link rel="manifest" href="/manifest.json" />
+  <!-- Minimal Material-style variables (MD3-inspired) -->
+  <style>
+    :root{
+      --bg: #f7fbf8;
+      --surface: #ffffff;
+      --primary: #0b815a;
+      --on-primary: #ffffff;
+      --muted: #6b7280;
+      --accent: #ffb020;
+      --success: #16a34a;
+      --danger: #ef4444;
+      --glass: rgba(255,255,255,0.6);
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      --radius: 14px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#eaf6f0);color:#0f172a; -webkit-font-smoothing:antialiased}
+
+    /* layout */
+    .app{max-width:980px;margin:18px auto;padding:16px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#06b786);display:flex;align-items:center;justify-content:center;color:var(--on-primary);font-weight:700}
+    h1{font-size:1.05rem;margin:0}
+    .badge{background:var(--danger);color:white;padding:6px 8px;border-radius:999px;font-size:0.8rem}
+
+    /* grid */
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:900px){.grid{grid-template-columns:320px 1fr}}
+
+    /* card */
+    .card{background:var(--surface);border-radius:var(--radius);padding:12px;box-shadow:0 6px 18px rgba(11,129,90,0.07)}
+
+    /* quick mood entry */
+    .mood-row{display:flex;flex-direction:column;gap:8px}
+    .emoji-row{display:flex;gap:8px}
+    .emoji{width:44px;height:44px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer;border:2px solid transparent}
+    .emoji[aria-pressed="true"]{border-color:var(--primary);box-shadow:0 6px 12px rgba(11,129,90,0.08)}
+    .scale{display:flex;gap:6px;align-items:center}
+    .scale input[type=range]{width:100%}
+
+    /* journal */
+    textarea{width:100%;min-height:120px;border-radius:10px;border:1px solid #e6eef0;padding:10px;font-size:0.95rem}
+    .controls{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+    button{background:var(--primary);color:var(--on-primary);border:0;padding:8px 12px;border-radius:10px;cursor:pointer}
+    button.secondary{background:transparent;color:var(--primary);border:1px solid rgba(11,129,90,0.14)}
+
+    /* chart placeholder */
+    .small-chart{height:120px}
+
+    /* feed */
+    .feed-item{display:flex;gap:10px;padding:10px;border-radius:10px;border:1px solid #f0f4f2}
+
+    /* gamified garden */
+    .garden{height:120px;display:flex;align-items:center;justify-content:center;gap:8px}
+    .plant{width:60px;height:60px;border-radius:50%;background:linear-gradient(180deg,#9de0c6,#5fbf95);display:flex;align-items:center;justify-content:center;font-weight:700;color:#064635}
+
+    /* utilities */
+    .muted{color:var(--muted);font-size:0.9rem}
+    .sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden>PP</div>
+        <div>
+          <h1>PeacePal — Dashboard</h1>
+          <div class="muted">Welcome back — quick check-in</div>
+        </div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button id="reportsBtn" aria-haspopup="true" aria-controls="reportsHub">Reports <span id="reportBadge" class="badge" style="display:none">1</span></button>
+        <button id="exportBtn" title="Export reports">Export</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- left column / compact widgets -->
+      <section class="card" aria-labelledby="quickMoodLabel">
+        <h2 id="quickMoodLabel">Quick Mood</h2>
+        <div class="mood-row" role="region" aria-label="Quick mood entry">
+          <div class="emoji-row" role="tablist" aria-label="Emoji mood options">
+            <button class="emoji" data-val="5" aria-pressed="false" aria-label="Very happy">😄</button>
+            <button class="emoji" data-val="4" aria-pressed="false" aria-label="Happy">🙂</button>
+            <button class="emoji" data-val="3" aria-pressed="false" aria-label="Neutral">😐</button>
+            <button class="emoji" data-val="2" aria-pressed="false" aria-label="Sad">☹️</button>
+            <button class="emoji" data-val="1" aria-pressed="false" aria-label="Very sad">😭</button>
+          </div>
+
+          <label for="scale">Intensity: <span id="scaleVal">5</span></label>
+          <div class="scale">
+            <input id="scale" type="range" min="1" max="10" value="5" aria-label="mood intensity scale">
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button id="saveMoodBtn">Save Mood</button>
+            <button class="secondary" id="openJournalBtn">Open Journal</button>
+          </div>
+        </div>
+
+        <hr style="margin:12px 0">
+        <div aria-live="polite" id="moodMessage" class="muted">Tip: Consistency builds insight. Try journaling 3x this week.</div>
+      </section>
+
+      <!-- right column / main content -->
+      <section>
+        <div class="card" style="margin-bottom:12px">
+          <h2>Journal</h2>
+          <label for="journalText" class="sr-only">Write journal entry</label>
+          <textarea id="journalText" placeholder="How are you feeling? Write a sentence or a few thoughts..."></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+            <div class="muted">On-device sentiment & suggestions</div>
+            <div class="controls">
+              <button class="secondary" id="suggestBtn">Suggest</button>
+              <button id="saveJournalBtn">Save Entry</button>
+            </div>
+          </div>
+          <div id="suggestions" style="margin-top:8px"></div>
+        </div>
+
+        <div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px">
+            <h3>Sentiment (last 7)</h3>
+            <canvas id="sentimentChart" class="small-chart" role="img" aria-label="Sentiment chart"></canvas>
+          </div>
+
+          <div style="width:200px">
+            <h3>Garden</h3>
+            <div class="garden" id="garden">
+              <div class="plant" id="plantLevel">1</div>
+              <div class="muted">Wellness Score</div>
+            </div>
+            <div style="text-align:right;margin-top:8px"><button id="addPointBtn">Add Point</button></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3>Discovery Feed</h3>
+          <div id="feed">
+            <article class="feed-item" tabindex="0">
+              <div style="flex:1">
+                <strong>5-minute breathing</strong>
+                <div class="muted">Simple breathing exercise to ground you.</div>
+              </div>
+              <div><button class="secondary">Save</button></div>
+            </article>
+            <article class="feed-item" tabindex="0">
+              <div style="flex:1">
+                <strong>Evening unwind tips</strong>
+                <div class="muted">Wind down routine for better sleep.</div>
+              </div>
+              <div><button class="secondary">Save</button></div>
+            </article>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <div id="reportsHub" hidden>
+      <!-- stub for All Reports hub -->
+    </div>
+  </div>
+
+  <script>
+  /*
+    PeacePal — single-file front-end demo
+    Implements core methods from spec as lightweight stubs that operate on IndexedDB + optional encryption
+  */
+
+  // Utilities: IndexedDB wrapper (promisified minimal)
+  const DB_NAME = 'peacepal-db-v1';
+  const STORE = 'entries';
+  let db;
+  function openDB(){
+    return new Promise((res,rej)=>{
+      const rq = indexedDB.open(DB_NAME,1);
+      rq.onupgradeneeded = () => {
+        const d = rq.result;
+        if(!d.objectStoreNames.contains(STORE)){
+          d.createObjectStore(STORE,{keyPath:'id'});
+        }
+        if(!d.objectStoreNames.contains('meta')) d.createObjectStore('meta',{keyPath:'k'});
+      };
+      rq.onsuccess = ()=>{db=rq.result;res(db)};
+      rq.onerror = ()=>rej(rq.error);
+    })
+  }
+
+  function put(obj){
+    return new Promise(async(res,rej)=>{
+      await openDB();
+      const tx = db.transaction([STORE],'readwrite');
+      const s = tx.objectStore(STORE);
+      s.put(obj);
+      tx.oncomplete = ()=>res(true);
+      tx.onerror = ()=>rej(tx.error);
+    })
+  }
+  function getAll(){
+    return new Promise(async(res,rej)=>{
+      await openDB();
+      const tx = db.transaction([STORE],'readonly');
+      const s = tx.objectStore(STORE);
+      const rq = s.getAll();
+      rq.onsuccess = ()=>res(rq.result);
+      rq.onerror = ()=>rej(rq.error);
+    })
+  }
+
+  // -- Crypto helper (Web Crypto AES-GCM) --
+  async function generateKey(){
+    const key = await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+    return key;
+  }
+  async function exportKey(key){
+    const raw = await crypto.subtle.exportKey('raw',key);
+    return btoa(String.fromCharCode(...new Uint8Array(raw)));
+  }
+  async function importKey(base64){
+    const raw = Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+    return crypto.subtle.importKey('raw',raw,{name:'AES-GCM'},true,['encrypt','decrypt']);
+  }
+  async function encryptText(key,txt){
+    const enc = new TextEncoder();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode(txt));
+    const a = new Uint8Array(ct);
+    // store iv + ciphertext as base64
+    const buf = new Uint8Array(iv.length + a.length);
+    buf.set(iv,0);buf.set(a,iv.length);
+    return btoa(String.fromCharCode(...buf));
+  }
+  async function decryptText(key,base64){
+    const raw = Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+    const iv = raw.slice(0,12);
+    const ct = raw.slice(12);
+    const pt = await crypto.subtle.decrypt({name:'AES-GCM',iv},key,ct);
+    return new TextDecoder().decode(pt);
+  }
+
+  // store/import key in meta store
+  async function saveKeyBase64(kb){
+    await openDB();
+    const tx = db.transaction(['meta'],'readwrite');
+    tx.objectStore('meta').put({k:'encKey',v:kb});
+    return new Promise((res,rej)=>{tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error)});
+  }
+  async function getKeyBase64(){
+    await openDB();
+    return new Promise((res,rej)=>{
+      const tx = db.transaction(['meta'],'readonly');
+      const rq = tx.objectStore('meta').get('encKey');
+      rq.onsuccess=()=>res(rq.result?.v);
+      rq.onerror=()=>rej(rq.error);
+    })
+  }
+
+  // consent + key creation
+  let ENC_KEY = null;
+  async function ensureKey(){
+    const b = await getKeyBase64();
+    if(b){ ENC_KEY = await importKey(b); return }
+    // ask for consent for encryption
+    const consent = confirm('PeacePal: encrypt local journal entries on this device? (recommended)');
+    if(!consent) return;
+    const k = await generateKey();
+    const kb = await exportKey(k);
+    await saveKeyBase64(kb);
+    ENC_KEY = k;
+  }
+
+  // Core methods (lightweight implementations)
+  async function updateSentiment(text){
+    // naive sentiment scoring: counts positive/negative keywords
+    const positive = ['good','great','happy','well','better','calm','relaxed','grateful','love'];
+    const negative = ['sad','bad','angry','worried','anxious','depressed','upset','tired','stressed'];
+    const tx = text.toLowerCase();
+    let score = 0;
+    for(const p of positive) if(tx.includes(p)) score+=1;
+    for(const n of negative) if(tx.includes(n)) score-=1;
+    // map to 1..5
+    const mapped = Math.max(1,Math.min(5,3 + Math.round(score/1)));
+    return mapped;
+  }
+
+  async function generateAISuggestions(entry){
+    // simple rule-based suggestions for demo
+    const s = await updateSentiment(entry);
+    const suggestions = [];
+    if(s <= 2) suggestions.push('Try a 3–5 minute breathing exercise.');
+    if(entry.length < 40) suggestions.push('Write for 5 more minutes — free association helps.');
+    if(s >=4) suggestions.push('Great! Consider logging what helped today to repeat it.');
+    // showCharacterMessage for friendly persona
+    showCharacterMessage(s<=2? 'Take a breath. I'm here.' : 'Nice! Keep it up.');
+    return suggestions;
+  }
+
+  function showCharacterMessage(msg){
+    const node = document.getElementById('moodMessage');
+    node.textContent = msg;
+  }
+
+  async function saveJournalEntry(){
+    const txt = document.getElementById('journalText').value.trim();
+    if(!txt) return alert('Write something first.');
+    const id = 'e_'+Date.now();
+    const sentiment = await updateSentiment(txt);
+    const suggestions = await generateAISuggestions(txt);
+    const payload = {id, text: txt, created: new Date().toISOString(), sentiment, suggestions};
+
+    if(ENC_KEY){
+      payload.encrypted = true;
+      payload.cipher = await encryptText(ENC_KEY, JSON.stringify({text:txt,suggestions,sentiment}));
+      // remove plaintext
+      delete payload.text; delete payload.suggestions;
+    }
+    await put(payload);
+    updateNotificationBadge();
+    updateSentimentChart();
+    calculateWellnessScore();
+    showCharacterMessage('Saved — nice work');
+    document.getElementById('journalText').value = '';
+  }
+
+  async function addWellnessPoints(n=1){
+    await openDB();
+    const tx = db.transaction(['meta'],'readwrite');
+    const m = tx.objectStore('meta');
+    const cur = (await new Promise((r)=>{const rq=m.get('points'); rq.onsuccess=()=>r(rq.result?.v||0)}));
+    const nv = cur + n;
+    m.put({k:'points',v:nv});
+    return new Promise((res)=>{tx.oncomplete=()=>{res(nv)}});
+  }
+
+  async function calculateWellnessScore(){
+    // simplistic: use recent entries' sentiment average + points
+    const entries = await getAll();
+    let sum=0,count=0;
+    for(const e of entries.slice(-7)){
+      if(e.sentiment){sum+=e.sentiment;count++}
+      else if(e.encrypted && ENC_KEY && e.cipher){
+        try{const dec = await decryptText(ENC_KEY,e.cipher);const obj=JSON.parse(dec);sum+=obj.sentiment;count++}catch(e){}
+      }
+    }
+    const avg = count? Math.round(sum/count):3;
+    const pts = (await (async()=>{await openDB();return new Promise((r)=>{const tx=db.transaction('meta','readonly');const rq=tx.objectStore('meta').get('points');rq.onsuccess=()=>r(rq.result?.v||0)});})())||0;
+    const score = Math.max(1,Math.min(5, Math.round((avg + Math.min(5, pts/5))/2)));
+    // update garden UI
+    document.getElementById('plantLevel').textContent = score;
+    return score;
+  }
+
+  async function recommendNextAction(){
+    // uses last sentiment + time-of-day heuristics
+    const entries = await getAll();
+    const last = entries[entries.length-1];
+    const now = new Date();
+    if(!last) return 'Start with a short check-in — 3 minute breathing.';
+    const hour = now.getHours();
+    if(last.sentiment <=2) return 'Try a grounding exercise and reach out to a friend.';
+    if(hour>=21) return 'Gentle stretching + avoid screens for 30 mins.';
+    return 'Log one small win from today — celebrate it.';
+  }
+
+  async function exportReport(type='csv'){
+    const entries = await getAll();
+    if(!entries.length) return alert('No entries to export');
+    if(type==='csv'){
+      const rows = [['id','created','sentiment','text_or_encrypted']];
+      for(const e of entries){
+        const text = e.text? e.text : (e.encrypted? '[ENCRYPTED]' : '');
+        rows.push([e.id,e.created,e.sentiment||'', '"'+text.replace(/"/g,'""')+'"']);
+      }
+      const csv = rows.map(r=>r.join(',')).join('\n');
+      const blob = new Blob([csv],{type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download = 'peacepal-entries.csv'; a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      // fallback: open print dialog with entries
+      const w = window.open('about:blank','_blank');
+      w.document.write('<pre>'+JSON.stringify(entries,null,2)+'</pre>');
+      w.print();
+    }
+  }
+
+  async function generateMonthlyReport(){
+    // simple aggregation demo
+    const entries = await getAll();
+    const last30 = entries.filter(e=> new Date(e.created) > new Date(Date.now()-1000*60*60*24*30));
+    const avgSent = (last30.reduce((s,e)=>s+(e.sentiment||3),0)/(last30.length||1)).toFixed(2);
+    const report = {period:new Date().toISOString(),count:last30.length,avgSentiment:avgSent};
+    // store as meta for notification
+    await openDB();
+    const tx = db.transaction(['meta'],'readwrite');
+    tx.objectStore('meta').put({k:'lastMonthly',v:report});
+    tx.oncomplete = ()=> updateNotificationBadge();
+    return report;
+  }
+
+  async function updateNotificationBadge(){
+    await openDB();
+    const last = await new Promise((r)=>{const tx=db.transaction('meta','readonly');const rq=tx.objectStore('meta').get('lastMonthly');rq.onsuccess=()=>r(rq.result)});
+    const badge = document.getElementById('reportBadge');
+    if(last) { badge.style.display='inline-block'; badge.textContent='1' } else badge.style.display='none';
+  }
+
+  // Offline caching (service worker registration + cacheCoreAssets stub)
+  async function cacheCoreAssets(){
+    // register service worker (requires https or localhost)
+    if('serviceWorker' in navigator){
+      try{
+        // create sw script dynamically so single-file demo works
+        const swCode = `self.addEventListener('install', e => {self.skipWaiting();e.waitUntil(caches.open('peacepal-v1').then(c=>c.addAll(['/','/index.html'])))});
+        self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+        self.addEventListener('fetch', e => { if(e.request.mode==='navigate'){ e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)).catch(()=>caches.match('/')))} });`;
+        const blob = new Blob([swCode],{type:'application/javascript'});
+        const url = URL.createObjectURL(blob);
+        await navigator.serviceWorker.register(url);
+        console.info('Service worker registered');
+      }catch(e){console.warn('SW reg failed',e)}
+    }
+  }
+
+  // Simple sentiment chart using canvas (no external libs)
+  function initializeDashboardChart(){
+    const c = document.getElementById('sentimentChart');
+    c.width = c.clientWidth*devicePixelRatio; c.height = c.clientHeight*devicePixelRatio;
+    const ctx = c.getContext('2d');
+    ctx.scale(devicePixelRatio,devicePixelRatio);
+  }
+  async function updateSentimentChart(){
+    const c = document.getElementById('sentimentChart');
+    const ctx = c.getContext('2d');
+    const entries = await getAll();
+    const last7 = entries.slice(-7);
+    // clear
+    ctx.clearRect(0,0,c.clientWidth,c.clientHeight);
+    // draw baseline grid
+    const w = c.clientWidth; const h = c.clientHeight;
+    ctx.strokeStyle='#e6f2eb'; ctx.lineWidth=1;
+    for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(0,(i+1)*(h/6));ctx.lineTo(w,(i+1)*(h/6));ctx.stroke()}
+    // draw lines
+    ctx.beginPath();
+    ctx.strokeStyle='#0b815a'; ctx.lineWidth=2; ctx.lineJoin='round';
+    const gap = w/Math.max(6,(last7.length-1)||6);
+    last7.forEach((e,i)=>{
+      const val = e.sentiment || (e.encrypted?3:3);
+      const x = 8 + i*gap; const y = h - (val/5)*(h-10) - 6;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      // dot
+      ctx.fillStyle='#fff'; ctx.strokeStyle='#0b815a'; ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    });
+    ctx.stroke();
+  }
+
+  // Sync pending data stub
+  async function syncPendingData(){
+    // placeholder: attempt to send to server when online
+    if(navigator.onLine) console.log('Sync: nothing to sync in demo');
+  }
+
+  // Event wiring
+  document.addEventListener('DOMContentLoaded', async ()=>{
+    await openDB();
+    await ensureKey();
+    initializeDashboardChart();
+    updateSentimentChart();
+    updateNotificationBadge();
+    cacheCoreAssets();
+
+    // emoji buttons
+    document.querySelectorAll('.emoji').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.emoji').forEach(b=>b.setAttribute('aria-pressed','false'));
+        btn.setAttribute('aria-pressed','true');
+        document.getElementById('scale').value = btn.dataset.val*2; // map 1-5 to 1-10 approx
+        document.getElementById('scaleVal').textContent = document.getElementById('scale').value;
+      })
+    });
+
+    document.getElementById('scale').addEventListener('input', (e)=>{document.getElementById('scaleVal').textContent = e.target.value});
+
+    document.getElementById('saveMoodBtn').addEventListener('click', async ()=>{
+      // quick mood save as a short journal entry
+      const emojis = document.querySelectorAll('.emoji[aria-pressed="true"]');
+      const intensity = document.getElementById('scale').value;
+      const moodTxt = emojis.length? emojis[0].textContent : '—';
+      const entry = `Quick mood: ${moodTxt} (intensity ${intensity})`;
+      document.getElementById('journalText').value = entry;
+      await saveJournalEntry();
+      await addWellnessPoints(1);
+      await calculateWellnessScore();
+    });
+
+    document.getElementById('openJournalBtn').addEventListener('click', ()=>{document.getElementById('journalText').focus()});
+    document.getElementById('saveJournalBtn').addEventListener('click', saveJournalEntry);
+    document.getElementById('suggestBtn').addEventListener('click', async ()=>{
+      const txt = document.getElementById('journalText').value || '';
+      const s = await generateAISuggestions(txt);
+      const node = document.getElementById('suggestions'); node.innerHTML = '';
+      s.forEach(it=>{const d=document.createElement('div');d.textContent='• '+it;node.appendChild(d)});
+    });
+    document.getElementById('addPointBtn').addEventListener('click', async ()=>{await addWellnessPoints(2); await calculateWellnessScore()});
+    document.getElementById('exportBtn').addEventListener('click', ()=>exportReport('csv'));
+    document.getElementById('reportsBtn').addEventListener('click', async ()=>{
+      const rep = await generateMonthlyReport();
+      alert('Monthly report generated — avg sentiment: '+rep.avgSentiment+' entries: '+rep.count);
+    });
+
+    window.addEventListener('online', syncPendingData);
+    window.addEventListener('offline', ()=>console.log('offline'));
+  });
+
+  </script>
+</body>
+</html>
